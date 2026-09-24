@@ -138,7 +138,7 @@ function showNotification(type, title, desc, duration) {
         el.style.opacity = '0';
         el.style.transition = 'opacity 0.2s ease';
         setTimeout(() => el.remove(), 200);
-    }, duration || 2500);
+    }, duration || 2000);
 }
 
 window.addEventListener('message', (e) => {
