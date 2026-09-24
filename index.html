@@ -11,13 +11,14 @@ body {
     height: 100vh;
     overflow: hidden;
     pointer-events: none;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
 }
 
-/* NOTIFICATIONS */
+/* التنبيهات */
 #notifications {
     position: fixed;
-    top: 20px;
+    top: 25px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -27,25 +28,27 @@ body {
     z-index: 9999;
 }
 .notif {
-    background: rgba(0,0,0,0.75);
+    background: rgba(10, 10, 10, 0.82);
     color: #fff;
     font-size: 13px;
-    padding: 8px 18px;
-    border-radius: 4px;
+    padding: 7px 18px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     animation: fadeIn 0.2s ease;
+    text-shadow: 1px 1px 2px #000;
 }
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-6px); }
+    from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* FREECAM OPTIONS — نفس شكل الأصل */
+/* القائمة متموضعة تحت النص/الوسط بشوي */
 #freecam-panel {
     display: none;
     position: fixed;
-    top: 50%;
+    top: 58%; /* تحت منتصف الشاشة بشوي */
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0);
     text-align: center;
     pointer-events: none;
 }
@@ -57,43 +60,33 @@ body {
 .fc-item {
     display: block;
     font-size: 15px;
-    color: rgba(255, 255, 255, 0.45);
-    line-height: 1.9;
-    letter-spacing: 0.5px;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
-    transition: color 0.1s;
+    color: rgba(220, 220, 220, 0.45);
+    line-height: 1.75;
+    letter-spacing: 0.6px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95), 0 0 5px rgba(0,0,0,0.9);
+    transition: color 0.08s ease, font-size 0.08s ease;
     white-space: nowrap;
 }
 
 .fc-item.selected {
-    color: rgba(255, 255, 255, 0.95);
-    font-size: 15px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 16px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 1), 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
-/* السلاح / المركبة تحت القائمة */
+/* السلاح أو السيارة المختارة */
 #fc-sub {
     display: none;
-    margin-top: 10px;
-    color: rgba(255,255,255,0.55);
-    font-size: 12px;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+    margin-top: 6px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    font-weight: 500;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95);
     letter-spacing: 0.5px;
     text-align: center;
 }
 #fc-sub.visible { display: block; }
-
-/* تلميح السرعة */
-#fc-speed {
-    position: fixed;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.3);
-    font-size: 11px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    display: none;
-}
-#fc-speed.visible { display: block; }
 </style>
 </head>
 <body>
@@ -105,8 +98,6 @@ body {
     <div id="fc-sub"></div>
 </div>
 
-<div id="fc-speed"></div>
-
 <script>
 const state = {
     options: [], weapons: [], vehicles: [],
@@ -114,7 +105,7 @@ const state = {
 };
 
 const WEAPON_OPTS  = ["Shoot Weapon"];
-const VEHICLE_OPTS = ["Kick from Vehicle", "Hijack Vehicle", "Delete Vehicle", "Spawn Vehicle"];
+const VEHICLE_OPTS = ["Spawn Vehicle", "Kick from Vehicle", "Hijack Vehicle", "Delete Vehicle"];
 
 function renderOptions() {
     const container = document.getElementById('fc-options');
@@ -122,9 +113,10 @@ function renderOptions() {
 
     state.options.forEach((opt, i) => {
         const span = document.createElement('span');
-        span.className = 'fc-item' + (i === state.hoveredIndex ? ' selected' : '');
+        const isHovered = (i === state.hoveredIndex);
+        span.className = 'fc-item' + (isHovered ? ' selected' : '');
 
-        if (i === state.hoveredIndex) {
+        if (isHovered) {
             span.textContent = '~ ' + opt + ' ~';
         } else {
             span.textContent = opt;
@@ -134,11 +126,6 @@ function renderOptions() {
     });
 
     updateSub();
-
-    // speed hint
-    const spd = document.getElementById('fc-speed');
-    spd.textContent = 'Speed: ' + parseFloat(state.speed).toFixed(1) + '  |  +/- to adjust';
-    spd.classList.add('visible');
 }
 
 function updateSub() {
@@ -165,9 +152,9 @@ function showNotification(type, title, desc, duration) {
     document.getElementById('notifications').appendChild(el);
     setTimeout(() => {
         el.style.opacity = '0';
-        el.style.transition = 'opacity 0.3s';
-        setTimeout(() => el.remove(), 300);
-    }, duration || 3000);
+        el.style.transition = 'opacity 0.25s';
+        setTimeout(() => el.remove(), 250);
+    }, duration || 2500);
 }
 
 window.addEventListener('message', (e) => {
@@ -177,7 +164,6 @@ window.addEventListener('message', (e) => {
     switch (data.action) {
         case 'displayFreecam': {
             const panel = document.getElementById('freecam-panel');
-            const spd   = document.getElementById('fc-speed');
             if (data.visible) {
                 if (data.options)  state.options  = data.options;
                 if (data.weapons)  state.weapons  = data.weapons;
@@ -185,12 +171,10 @@ window.addEventListener('message', (e) => {
                 if (data.hoveredIndex !== undefined) state.hoveredIndex = data.hoveredIndex - 1;
                 if (data.weaponIndex  !== undefined) state.weaponIndex  = data.weaponIndex  - 1;
                 if (data.vehicleIndex !== undefined) state.vehicleIndex = data.vehicleIndex - 1;
-                if (data.speed !== undefined) state.speed = data.speed;
                 panel.classList.add('visible');
                 renderOptions();
             } else {
                 panel.classList.remove('visible');
-                spd.classList.remove('visible');
             }
             break;
         }
@@ -207,12 +191,6 @@ window.addEventListener('message', (e) => {
         case 'freecamVehicle': {
             state.vehicleIndex = (data.vehicleIndex || 1) - 1;
             updateSub();
-            break;
-        }
-        case 'freecamSpeed': {
-            state.speed = data.speed;
-            document.getElementById('fc-speed').textContent =
-                'Speed: ' + parseFloat(data.speed).toFixed(1) + '  |  +/- to adjust';
             break;
         }
         case 'showNotification': {
