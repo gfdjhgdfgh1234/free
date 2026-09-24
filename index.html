@@ -5,8 +5,9 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-    background: transparent;
+html, body {
+    background: transparent !important;
+    background-color: transparent !important;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -26,34 +27,38 @@ body {
     align-items: center;
     gap: 8px;
     z-index: 9999;
+    background: transparent !important;
 }
 
+/* تصميم نوتيفاي نظيف بدون backdrop-filter لإزالة المربع الأسود نهائياً */
 .notif {
-    background: rgba(14, 14, 14, 0.88);
-    color: #fff;
+    background: rgba(20, 20, 20, 0.75);
+    color: #ffffff;
     font-size: 13px;
     font-weight: 500;
-    padding: 8px 22px;
-    border-radius: 6px;
+    padding: 7px 20px;
+    border-radius: 4px;
     border-left: 3px solid #7df3c1;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-    animation: slideDown 0.25s ease;
-    backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    animation: slideDown 0.2s ease-out;
     text-shadow: 1px 1px 2px #000;
 }
 
-.notif.success { border-color: #7df3c1; }
-.notif.error   { border-color: #ff6b6b; }
-.notif.warning { border-color: #feca57; }
-.notif.info    { border-color: #54a0ff; }
+.notif.success { border-left-color: #2ed573; }
+.notif.error   { border-left-color: #ff4757; }
+.notif.warning { border-left-color: #ffa502; }
+.notif.info    { border-left-color: #1e90ff; }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
+    from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ================== FREECAM TEXT LIST ================== */
-/* موقع القائمة: منخفضة تحت منتصف الشاشة (top: 65%) */
+/* ================== FREECAM LIST ================== */
+/* موقع القائمة: تحت المنتصف (top: 65%) */
 #freecam-panel {
     display: none;
     position: fixed;
@@ -62,6 +67,7 @@ body {
     transform: translate(-50%, 0);
     text-align: center;
     pointer-events: none;
+    background: transparent !important;
 }
 
 #freecam-panel.visible {
@@ -71,29 +77,27 @@ body {
 .fc-item {
     display: block;
     font-size: 14px;
-    color: rgba(230, 230, 230, 0.45);
+    color: rgba(220, 220, 220, 0.45);
     line-height: 1.8;
-    letter-spacing: 0.6px;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.9);
-    transition: all 0.08s ease;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 0, 0, 0.9);
+    transition: all 0.05s ease;
     white-space: nowrap;
 }
 
-/* العنصر المحدد باللون الأحمر/المميز كما كان في كودك */
+/* الخيار المحدد يظهر باللون الأحمر والمميز */
 .fc-item.selected {
     color: #ff4757;
     font-weight: 700;
-    font-size: 16px;
-    text-shadow: 1px 1px 3px #000, 0 0 10px rgba(255, 71, 87, 0.6);
+    font-size: 15px;
+    text-shadow: 1px 1px 3px #000, 0 0 8px rgba(255, 71, 87, 0.6);
 }
 </style>
 </head>
 <body>
 
-<!-- شريط النوتيفاي -->
 <div id="notifications"></div>
 
-<!-- قائمة الخيارات النصية -->
 <div id="freecam-panel">
     <div id="fc-options"></div>
 </div>
@@ -135,8 +139,8 @@ function showNotification(type, title, desc, duration) {
 
     setTimeout(() => {
         el.style.opacity = '0';
-        el.style.transition = 'opacity 0.25s ease';
-        setTimeout(() => el.remove(), 250);
+        el.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => el.remove(), 200);
     }, duration || 2500);
 }
 
