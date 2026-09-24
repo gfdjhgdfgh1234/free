@@ -11,11 +11,11 @@ body {
     height: 100vh;
     overflow: hidden;
     pointer-events: none;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     user-select: none;
 }
 
-/* التنبيهات */
+/* ================== NOTIFICATIONS ================== */
 #notifications {
     position: fixed;
     top: 25px;
@@ -24,29 +24,40 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     z-index: 9999;
 }
+
 .notif {
-    background: rgba(10, 10, 10, 0.82);
+    background: rgba(14, 14, 14, 0.88);
     color: #fff;
     font-size: 13px;
-    padding: 7px 18px;
+    font-weight: 500;
+    padding: 8px 22px;
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    animation: fadeIn 0.2s ease;
+    border-left: 3px solid #7df3c1;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    animation: slideDown 0.25s ease;
+    backdrop-filter: blur(6px);
     text-shadow: 1px 1px 2px #000;
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
+
+.notif.success { border-color: #7df3c1; }
+.notif.error   { border-color: #ff6b6b; }
+.notif.warning { border-color: #feca57; }
+.notif.info    { border-color: #54a0ff; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* القائمة متموضعة تحت النص/الوسط بشوي */
+/* ================== FREECAM TEXT LIST ================== */
+/* موقع القائمة: منخفضة تحت منتصف الشاشة (top: 65%) */
 #freecam-panel {
     display: none;
     position: fixed;
-    top: 58%; /* تحت منتصف الشاشة بشوي */
+    top: 65%;
     left: 50%;
     transform: translate(-50%, 0);
     text-align: center;
@@ -59,100 +70,72 @@ body {
 
 .fc-item {
     display: block;
-    font-size: 15px;
-    color: rgba(220, 220, 220, 0.45);
-    line-height: 1.75;
+    font-size: 14px;
+    color: rgba(230, 230, 230, 0.45);
+    line-height: 1.8;
     letter-spacing: 0.6px;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95), 0 0 5px rgba(0,0,0,0.9);
-    transition: color 0.08s ease, font-size 0.08s ease;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.9);
+    transition: all 0.08s ease;
     white-space: nowrap;
 }
 
+/* العنصر المحدد باللون الأحمر/المميز كما كان في كودك */
 .fc-item.selected {
-    color: #ffffff;
-    font-weight: 600;
+    color: #ff4757;
+    font-weight: 700;
     font-size: 16px;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 1), 0 0 8px rgba(255, 255, 255, 0.4);
+    text-shadow: 1px 1px 3px #000, 0 0 10px rgba(255, 71, 87, 0.6);
 }
-
-/* السلاح أو السيارة المختارة */
-#fc-sub {
-    display: none;
-    margin-top: 6px;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 13px;
-    font-weight: 500;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95);
-    letter-spacing: 0.5px;
-    text-align: center;
-}
-#fc-sub.visible { display: block; }
 </style>
 </head>
 <body>
 
+<!-- شريط النوتيفاي -->
 <div id="notifications"></div>
 
+<!-- قائمة الخيارات النصية -->
 <div id="freecam-panel">
     <div id="fc-options"></div>
-    <div id="fc-sub"></div>
 </div>
 
 <script>
-const state = {
-    options: [], weapons: [], vehicles: [],
-    hoveredIndex: 0, weaponIndex: 0, vehicleIndex: 0, speed: 0.5
-};
+let currentFeatures = [];
+let currentIndex = 1;
+let currentSub = "";
 
-const WEAPON_OPTS  = ["Shoot Weapon"];
-const VEHICLE_OPTS = ["Spawn Vehicle", "Kick from Vehicle", "Hijack Vehicle", "Delete Vehicle"];
-
-function renderOptions() {
+function renderMenu() {
     const container = document.getElementById('fc-options');
     container.innerHTML = '';
 
-    state.options.forEach((opt, i) => {
+    currentFeatures.forEach((feat, i) => {
         const span = document.createElement('span');
-        const isHovered = (i === state.hoveredIndex);
-        span.className = 'fc-item' + (isHovered ? ' selected' : '');
+        const isSelected = (i + 1 === currentIndex);
+        span.className = 'fc-item' + (isSelected ? ' selected' : '');
 
-        if (isHovered) {
-            span.textContent = '~ ' + opt + ' ~';
+        if (isSelected) {
+            if (currentSub && currentSub !== "") {
+                span.textContent = `Q | ${feat} (${currentSub}) | E`;
+            } else {
+                span.textContent = `~ ${feat} ~`;
+            }
         } else {
-            span.textContent = opt;
+            span.textContent = feat;
         }
 
         container.appendChild(span);
     });
-
-    updateSub();
-}
-
-function updateSub() {
-    const sub = document.getElementById('fc-sub');
-    const opt = state.options[state.hoveredIndex];
-
-    if (WEAPON_OPTS.includes(opt) && state.weapons.length > 0) {
-        sub.classList.add('visible');
-        const w = state.weapons[state.weaponIndex] || '—';
-        sub.textContent = '◄  ' + w + '  ►';
-    } else if (VEHICLE_OPTS.includes(opt) && state.vehicles.length > 0) {
-        sub.classList.add('visible');
-        const v = state.vehicles[state.vehicleIndex] || '—';
-        sub.textContent = '◄  ' + v + '  ►';
-    } else {
-        sub.classList.remove('visible');
-    }
 }
 
 function showNotification(type, title, desc, duration) {
+    const container = document.getElementById('notifications');
     const el = document.createElement('div');
-    el.className = 'notif';
-    el.textContent = (title ? title + (desc ? ': ' + desc : '') : desc);
-    document.getElementById('notifications').appendChild(el);
+    el.className = `notif ${type}`;
+    el.innerHTML = `<b>${title}</b>${desc ? ': ' + desc : ''}`;
+    container.appendChild(el);
+
     setTimeout(() => {
         el.style.opacity = '0';
-        el.style.transition = 'opacity 0.25s';
+        el.style.transition = 'opacity 0.25s ease';
         setTimeout(() => el.remove(), 250);
     }, duration || 2500);
 }
@@ -161,42 +144,24 @@ window.addEventListener('message', (e) => {
     const data = e.data;
     if (!data || !data.action) return;
 
-    switch (data.action) {
-        case 'displayFreecam': {
-            const panel = document.getElementById('freecam-panel');
-            if (data.visible) {
-                if (data.options)  state.options  = data.options;
-                if (data.weapons)  state.weapons  = data.weapons;
-                if (data.vehicles) state.vehicles = data.vehicles;
-                if (data.hoveredIndex !== undefined) state.hoveredIndex = data.hoveredIndex - 1;
-                if (data.weaponIndex  !== undefined) state.weaponIndex  = data.weaponIndex  - 1;
-                if (data.vehicleIndex !== undefined) state.vehicleIndex = data.vehicleIndex - 1;
-                panel.classList.add('visible');
-                renderOptions();
-            } else {
-                panel.classList.remove('visible');
-            }
-            break;
+    if (data.action === 'displayFreecam') {
+        const panel = document.getElementById('freecam-panel');
+        if (data.visible) {
+            panel.classList.add('visible');
+        } else {
+            panel.classList.remove('visible');
         }
-        case 'freecamHover': {
-            state.hoveredIndex = (data.hoveredIndex || 1) - 1;
-            renderOptions();
-            break;
-        }
-        case 'freecamWeapon': {
-            state.weaponIndex = (data.weaponIndex || 1) - 1;
-            updateSub();
-            break;
-        }
-        case 'freecamVehicle': {
-            state.vehicleIndex = (data.vehicleIndex || 1) - 1;
-            updateSub();
-            break;
-        }
-        case 'showNotification': {
-            showNotification(data.type, data.title, data.desc, data.duration);
-            break;
-        }
+    }
+
+    else if (data.action === 'updateState') {
+        currentFeatures = data.features || [];
+        currentIndex = data.currentFeature || 1;
+        currentSub = data.subValue || "";
+        renderMenu();
+    }
+
+    else if (data.action === 'showNotification') {
+        showNotification(data.type, data.title, data.desc, data.duration);
     }
 });
 </script>
